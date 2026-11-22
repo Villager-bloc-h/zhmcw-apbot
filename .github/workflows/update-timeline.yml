@@ -1,0 +1,55 @@
+name: Update autopatrol timeline
+
+on:
+  schedule:
+    # 19:17 UTC = 03:17 Asia/Shanghai
+    - cron: "17 19 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: autopatrol-timeline
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write bot password file
+        env:
+          MCW_BOT_PASSWORD: ${{ secrets.MCW_BOT_PASSWORD }}
+          MCW_BOT_USER: ${{ vars.MCW_BOT_USER || 'Villager-bloc-h' }}
+          MCW_BOT_SUFFIX: ${{ vars.MCW_BOT_SUFFIX || 'ap' }}
+        run: |
+          python - <<'PY'
+          import os
+
+          user = os.environ["MCW_BOT_USER"]
+          suffix = os.environ["MCW_BOT_SUFFIX"]
+          password = os.environ["MCW_BOT_PASSWORD"]
+          if not password:
+              raise SystemExit("MCW_BOT_PASSWORD secret is not set")
+
+          with open("password.py", "w", encoding="utf-8") as fh:
+              fh.write(f"({user!r}, BotPassword({suffix!r}, {password!r}))\n")
+          PY
+
+      - name: Run bot
+        env:
+          MCW_BOT_USER: ${{ vars.MCW_BOT_USER || 'Villager-bloc-h' }}
+        run: python ap_bot.py
