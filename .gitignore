@@ -1,0 +1,12 @@
+password.py
+pywikibot*.lwp
+throttle.ctrl
+apicache/
+logs/
+__pycache__/
+*.pyc
+.venv/
+vendor/
+.vscode/
+.idea/
+ap_bot.log
